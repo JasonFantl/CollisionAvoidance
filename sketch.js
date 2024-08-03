@@ -11,19 +11,19 @@ function setup() {
 
   // populate the grid with boids
   initializeRightAnglePair();
-    // initializeStriaghtOnPair();
-    // initializeCircle(10);
-// initializeRandom(20);
+  // initializeStraightOnPair();
+  // initializeCircle(10);
+  // initializeRandom(20);
   // initializeObstacle();
 }
 
 
 
 function draw() {
-  translate(width/2, height/2);
+  translate(width / 2, height / 2);
   background(255);
-  
-    
+
+
   for (let i = 0; i < boids.length; i++) {
     if (boids[i].stuck) {
       continue;
@@ -32,7 +32,7 @@ function draw() {
     // Policies.avoidClosest(boids[i], boids);
     Policies.velocityObstacle(boids[i], boids);
   }
-  
+
   for (let i = 0; i < boids.length; i++) {
     boids[i].move();
     boids[i].draw();
