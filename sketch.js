@@ -11,8 +11,8 @@ function setup() {
 
   // populate the grid with boids
   // initializeRightAnglePair();
-  initializeStraightOnPair();
-  // initializeCircle(3);
+  // initializeStraightOnPair();
+  initializeCircle(3);
   // initializeRandom(20);
   // initializeObstacle();
 }

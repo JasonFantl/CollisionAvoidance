@@ -53,7 +53,7 @@ class Policies {
     boid.nextVelocity = goal_vector; // may be overwritten later if there is an obstacle
 
     strokeWeight(1);
-    let v_scale = 30;
+    let v_scale = 40;
     // stroke(boid.color);
     // line(
     //   boid.position.x,
@@ -62,15 +62,19 @@ class Policies {
     //   boid.position.y + goal_vector.y * v_scale
     // );
 
+    // union all the velocity obstacles
+    let velocity_obstacles = []
     for (let other_boid of boids) {
       if (other_boid == boid) {
         continue;
       }
 
       let velocity_obstacle = new VelocityObstacle(boid, other_boid);
+      velocity_obstacles.push(velocity_obstacle);
 
+      // draw them
       if (boid == boids[0]) {
-        stroke(0);
+        stroke(other_boid.color);
         let o = p5.Vector.add(
           boid.position,
           p5.Vector.mult(velocity_obstacle.origin, v_scale)
@@ -78,87 +82,47 @@ class Policies {
         line(
           o.x,
           o.y,
-          o.x + velocity_obstacle.left_ray.x * 100,
-          o.y + velocity_obstacle.left_ray.y * 100
+          o.x + velocity_obstacle.left_ray.x * 200,
+          o.y + velocity_obstacle.left_ray.y * 200
         );
         line(
           o.x,
           o.y,
-          o.x + velocity_obstacle.right_ray.x * 100,
-          o.y + velocity_obstacle.right_ray.y * 100
+          o.x + velocity_obstacle.right_ray.x * 200,
+          o.y + velocity_obstacle.right_ray.y * 200
         );
       }
+    }
 
-      if (freeze_time) {
-        console.log("pos:", boid.position, "goal:", goal_vector, "vel:", boid.velocity);
-        console.log("o: ", velocity_obstacle.origin, "velocity_obstacle");
-      }
 
-      // the closest velocity will be one of the two projections onto each ray
-      let left_projection = p5.Vector.mult(
-        velocity_obstacle.left_ray,
-        p5.Vector.sub(goal_vector, velocity_obstacle.origin).dot(
-          velocity_obstacle.left_ray
-        )
-      ).add(velocity_obstacle.origin);
-      let right_projection = p5.Vector.mult(
-        velocity_obstacle.right_ray,
-        p5.Vector.sub(goal_vector, velocity_obstacle.origin).dot(
-          velocity_obstacle.right_ray
-        )
-      ).add(velocity_obstacle.origin);
+    // find a new velocity outside all the velocity obstacles. We use sampling here, but a linear program would be better
+    let best_sample_point = null;
+    let best_sample_point_score = 0.0;
+    for (let r = 0.1; r <= 1.0; r += 0.1) {
+      for (let d_theta = -Math.PI / 2; d_theta <= Math.PI / 2; d_theta += Math.PI / 16) {
 
-      if (boid == boids[0]) {
-        circle(
-          boid.position.x + left_projection.x * v_scale,
-          boid.position.y + left_projection.y * v_scale,
-          5
-        );
-        circle(
-          boid.position.x + right_projection.x * v_scale,
-          boid.position.y + right_projection.y * v_scale,
-          5
-        );
-      }
+        let sample_point = p5.Vector.rotate(goal_vector, d_theta).setMag(r);
+        let sample_point_score = r * 10 - abs(d_theta); // the closer to the goal_vector (r = 1.0, theta = 0) the better
 
-      if (velocity_obstacle.contains(goal_vector)) {
-
-        // choose the closest velocity to the original velocity that's also still within our speedlimit
-        // NOTE: Favor a side to cross on (1.0 for no preference, 1.1 for 10% easier to pick the left side)
-        let left_favor_offset = 1.1;
-        let left_projection_dist = p5.Vector.sub(
-          left_projection,
-          goal_vector
-        ).mag() / left_favor_offset;
-        let right_projection_dist = p5.Vector.sub(
-          right_projection,
-          goal_vector
-        ).mag();
-
-        if (
-          left_projection_dist < right_projection_dist &&
-          left_projection_dist < 1
-        ) {
-          boid.nextVelocity = left_projection;
-        } else if (
-          right_projection_dist < left_projection_dist &&
-          right_projection_dist < 1
-        ) {
-          boid.nextVelocity = right_projection;
-        } else if (left_projection_dist < right_projection_dist) {
-          // neither projection is within the speed limit, so choose the closest and normalize and hope for the best
-          boid.nextVelocity = left_projection.normalize();
-        } else if (right_projection_dist < left_projection_dist) {
-          boid.nextVelocity = right_projection.normalize();
-        } else {
-          print("Collided, will move away");
-          boid.nextVelocity = p5.Vector.sub(boid.position, other_boid.position).normalize();
+        for (let velocity_obstacle of velocity_obstacles) {
+          if (velocity_obstacle.contains(sample_point)) {
+            // NOTE: we can include time-to-collision in the score here
+            sample_point_score = -1;
+            break;
+          }
         }
 
-        if (freeze_time) {
-          console.log("contains, next velocity:", boid.nextVelocity);
+        if (sample_point_score > best_sample_point_score) {
+          best_sample_point = sample_point;
+          best_sample_point_score = sample_point_score;
         }
       }
+    }
+
+    if (best_sample_point != null) {
+      boid.nextVelocity = best_sample_point;
+    } else { // no valid velocities were found
+      boid.nextVelocity = createVector();
     }
 
     if (boid == boids[0]) {

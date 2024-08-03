@@ -20,7 +20,7 @@ class Boid {
     }
 
     // NOTE: Update the velocities in response to each other slowly
-    if (frameCount % 10 == 0) {
+    if (frameCount % 1 == 0) {
       this.velocity = this.nextVelocity;
     }
 

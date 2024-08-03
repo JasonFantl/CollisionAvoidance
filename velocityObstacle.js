@@ -17,8 +17,8 @@ class VelocityObstacle {
     );
 
     // NOTE: Swap from VO to RVO
-    this.origin = boid_B.velocity.copy(); // VO 
-    // this.origin = p5.Vector.add(boid_A.velocity, boid_B.velocity).mult(0.5); // RVO
+    // this.origin = boid_B.velocity.copy(); // VO 
+    this.origin = p5.Vector.add(boid_A.velocity, boid_B.velocity).mult(0.5); // RVO
 
     this.left_ray = p5.Vector.fromAngle(angleToPosition + coneAngle / 2);
     this.right_ray = p5.Vector.fromAngle(angleToPosition - coneAngle / 2);
