@@ -1,14 +1,16 @@
 class Boid {
   constructor(positon, goal, color) {
     this.position = positon;
-    this.velocity = createVector();
+    this.velocity = goal.copy().normalize();
     this.nextVelocity = createVector();
 
-    this.radius = 10;
+    this.radius = 15;
 
     this.goal = goal;
     this.color = color;
     this.trail = [];
+
+    this.collided = false;
   }
 
   move() {
@@ -16,10 +18,18 @@ class Boid {
     if (dist(this.position.x, this.position.y, this.goal.x, this.goal.y) < this.radius / 2) {
       this.nextVelocity = createVector();
     }
+
+    // NOTE: Update the velocities in response to each other slowly
+    if (frameCount % 10 == 0) {
+      this.velocity = this.nextVelocity;
+    }
+
     // verlet integration
-    this.velocity = this.nextVelocity;
-    this.velocity.add(p5.Vector.random2D().mult(random(0.1))); // noise is needed to avoid unstable equilibriums
-    this.position.add(p5.Vector.mult(this.velocity, dt));
+    if (!freeze_time) {
+      // NOTE: Add noise to velocity
+      // this.velocity.add(p5.Vector.random2D().mult(random(0.05)));
+      this.position.add(p5.Vector.mult(this.velocity, dt));
+    }
 
     if (frameCount % 5 == 0) {
       this.trail.push(this.position.copy());
@@ -29,9 +39,13 @@ class Boid {
   draw() {
     fill(this.color);
     noStroke();
-    circle(this.position.x, this.position.y, this.radius);
+    if (this.collided) {
+      strokeWeight(2);
+      stroke(200, 255, 255);
+    }
+    circle(this.position.x, this.position.y, this.radius * 2);
 
-    strokeWeight(0.5);
+    strokeWeight(1);
     noFill();
     stroke(100);
     stroke(this.color);
@@ -41,8 +55,4 @@ class Boid {
     }
     endShape();
   }
-}
-
-function mousePressed() {
-  boids[0].goal = createVector(mouseX - width / 2, mouseY - height / 2);
 }
