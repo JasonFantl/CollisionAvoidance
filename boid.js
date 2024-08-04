@@ -4,7 +4,8 @@ class Boid {
     this.velocity = goal.copy().normalize();
     this.nextVelocity = createVector();
 
-    this.radius = 15;
+    this.radius = 5;
+    this.check_collisions_in_time = 100; // NOTE: control time to consider collisions
 
     this.goal = goal;
     this.color = color;
@@ -27,7 +28,7 @@ class Boid {
     // verlet integration
     if (!freeze_time) {
       // NOTE: Add noise to velocity
-      // this.velocity.add(p5.Vector.random2D().mult(random(0.05)));
+      this.velocity.add(p5.Vector.random2D().mult(random(0.01)));
       this.position.add(p5.Vector.mult(this.velocity, dt));
     }
 
