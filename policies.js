@@ -75,6 +75,7 @@ class Policies {
       // draw them
       if (boid == boids[0]) {
         stroke(other_boid.color);
+        strokeWeight(0.5);
         let o = p5.Vector.add(
           boid.position,
           p5.Vector.mult(velocity_obstacle.origin, v_scale)
@@ -82,14 +83,14 @@ class Policies {
         line(
           o.x,
           o.y,
-          o.x + velocity_obstacle.left_ray.x * 200,
-          o.y + velocity_obstacle.left_ray.y * 200
+          o.x + velocity_obstacle.left_ray.x * 100,
+          o.y + velocity_obstacle.left_ray.y * 100
         );
         line(
           o.x,
           o.y,
-          o.x + velocity_obstacle.right_ray.x * 200,
-          o.y + velocity_obstacle.right_ray.y * 200
+          o.x + velocity_obstacle.right_ray.x * 100,
+          o.y + velocity_obstacle.right_ray.y * 100
         );
       }
     }
@@ -98,11 +99,15 @@ class Policies {
     // find a new velocity outside all the velocity obstacles. We use sampling here, but a linear program would be better
     let best_sample_point = null;
     let best_sample_point_score = 0.0;
-    for (let r = 0.1; r <= 1.0; r += 0.1) {
-      for (let d_theta = -Math.PI / 2; d_theta <= Math.PI / 2; d_theta += Math.PI / 16) {
+    let radius_resolution = 10;
+    let angle_resolution = 32;
+    for (let r = 0.1; r <= 1.0; r += 1.0 / radius_resolution) {
+      for (let d_theta = - 3 * PI / 4; d_theta <= 3 * PI / 4; d_theta += PI / angle_resolution) {
 
         let sample_point = p5.Vector.rotate(goal_vector, d_theta).setMag(r);
-        let sample_point_score = r * 10 - abs(d_theta); // the closer to the goal_vector (r = 1.0, theta = 0) the better
+        // NOTE: Influence always passing on the left by modifying the score to be a little higher on the left. Negative for right preference
+        let left_passing_influence = -0.1;
+        let sample_point_score = r * 10 - abs(d_theta + left_passing_influence / angle_resolution); // the closer to the goal_vector (r = 1.0, theta = 0) the better
 
         for (let velocity_obstacle of velocity_obstacles) {
           if (velocity_obstacle.contains(sample_point)) {
