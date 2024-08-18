@@ -6,12 +6,12 @@ class Policies {
     boid.nextVelocity = p5.Vector.sub(boid.goal, boid.position).normalize();
   }
 
-  // persue the goal, but push away from the closest boid
+  // pursue the goal, but push away from the closest boid
   static avoidClosest(boid, boids) {
     boid.acceleration = createVector(); // zero acceleration
 
     let closest_boid = null;
-    let clostest_boid_distance = null;
+    let closest_boid_distance = null;
     for (let other_boid of boids) {
       if (other_boid == boid) {
         continue;
@@ -22,15 +22,15 @@ class Policies {
       ).mag();
       if (
         closest_boid == null ||
-        other_boid_distance < clostest_boid_distance
+        other_boid_distance < closest_boid_distance
       ) {
         closest_boid = other_boid;
-        clostest_boid_distance = other_boid_distance;
+        closest_boid_distance = other_boid_distance;
       }
     }
 
     let avoid_vector_mag =
-      (boid.radius + closest_boid.radius) / clostest_boid_distance;
+      2 * (boid.radius + closest_boid.radius) / closest_boid_distance;
     let avoid_vector = p5.Vector.sub(
       boid.position,
       closest_boid.position
@@ -69,7 +69,7 @@ class Policies {
         continue;
       }
 
-      let velocity_obstacle = new VelocityObstacle(boid, other_boid);
+      let velocity_obstacle = new VelocityObstacle(boid, other_boid, boid.check_collisions_in_time);
       velocity_obstacles.push(velocity_obstacle);
 
       // draw them
@@ -78,7 +78,7 @@ class Policies {
         strokeWeight(0.5);
         let o = p5.Vector.add(
           boid.position,
-          p5.Vector.mult(velocity_obstacle.origin, v_scale)
+          p5.Vector.mult(velocity_obstacle.cone_origin, v_scale)
         );
         line(
           o.x,

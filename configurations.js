@@ -13,8 +13,8 @@ function initializeStraightOnPair(num_boids) {
 
 function initializeRightAnglePair(num_boids) {
   for (let i = 0; i < 2; i++) {
-    let start_vector = p5.Vector.fromAngle(TWO_PI * i / 4).mult(width / 2.1);
-    let goal_vector = p5.Vector.fromAngle(TWO_PI * i / 4).mult(-width / 2.1);
+    let start_vector = p5.Vector.fromAngle(TWO_PI * i / 4).mult(width / 2.5);
+    let goal_vector = p5.Vector.fromAngle(TWO_PI * i / 4).mult(-width / 2.5);
 
     boids[i] = new Boid(start_vector, goal_vector, color(255 * i / 2, 255, 255));
   }

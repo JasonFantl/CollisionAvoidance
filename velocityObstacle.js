@@ -9,32 +9,32 @@ function collisionConeAngle(position, radius) {
 class VelocityObstacle {
   constructor(boid_A, boid_B, collision_time_threshold) {
     let safety_margin_factor = 5;
-    let collision_radius = (boid_A.radius + boid_B.radius) + safety_margin_factor;
-    let relativePosition = p5.Vector.sub(boid_B.position, boid_A.position);
-    let angleToPosition = atan2(relativePosition.y, relativePosition.x);
-    let coneAngle = collisionConeAngle(relativePosition, collision_radius);
+    this.collision_radius = (boid_A.radius + boid_B.radius) + safety_margin_factor;
+    this.collision_position = p5.Vector.sub(boid_B.position, boid_A.position);
+    let angle_to_position = atan2(this.collision_position.y, this.collision_position.x);
+    let cone_angle = collisionConeAngle(this.collision_position, this.collision_radius);
 
     // NOTE: Swap from VO to RVO
 
     // // VO
-    // this.origin = boid_B.velocity.copy();
+    // this.cone_origin = boid_B.velocity.copy();
 
     // RVO WARNING: This only works when the other agent is using RVO.
     let alpha = 0.5;
     // NOTE: move to VO when velocity is zero
     alpha = boid_B.velocity.mag() / 2; // assumes max velocity of both is 1
-    this.origin = p5.Vector.add(p5.Vector.mult(boid_A.velocity, alpha), p5.Vector.mult(boid_B.velocity, 1 - alpha));
+    this.cone_origin = p5.Vector.add(p5.Vector.mult(boid_A.velocity, alpha), p5.Vector.mult(boid_B.velocity, 1 - alpha));
 
-    this.left_ray = p5.Vector.fromAngle(angleToPosition + coneAngle / 2);
-    this.right_ray = p5.Vector.fromAngle(angleToPosition - coneAngle / 2);
+    this.left_ray = p5.Vector.fromAngle(angle_to_position + cone_angle / 2);
+    this.right_ray = p5.Vector.fromAngle(angle_to_position - cone_angle / 2);
 
-    this.truncation_center = p5.Vector.div(relativePosition, collision_time_threshold); // relative to origin
-    this.truncation_radius = collision_radius / collision_time_threshold;
+    this.truncation_center = p5.Vector.div(this.collision_position, collision_time_threshold); // relative to origin
+    this.truncation_radius = this.collision_radius / collision_time_threshold;
   }
 
   // TODO: Optimize this calculation. WARNING! This needs to be carefully implemented, covering edge cases like >= 180 degree rays.
   contains(position) {
-    let relative_position = p5.Vector.sub(position, this.origin);
+    let relative_position = p5.Vector.sub(position, this.cone_origin);
     let angle_to_right_ray = (this.left_ray.angleBetween(this.right_ray) + TWO_PI) % TWO_PI;
     let angle_to_in_ray = (this.left_ray.angleBetween(relative_position) + TWO_PI) % TWO_PI;
     let in_cone = angle_to_right_ray < angle_to_in_ray;

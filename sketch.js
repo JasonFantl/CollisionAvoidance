@@ -12,7 +12,7 @@ function setup() {
   // populate the grid with boids
   // initializeRightAnglePair();
   // initializeStraightOnPair();
-  initializeCircle(3);
+  initializeCircle(12);
   // initializeRandom(20);
   // initializeObstacle();
 }
