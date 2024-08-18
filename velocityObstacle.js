@@ -16,14 +16,14 @@ class VelocityObstacle {
 
     // NOTE: Swap from VO to RVO
 
-    // // VO
-    // this.cone_origin = boid_B.velocity.copy();
+    // VO
+    this.cone_origin = boid_B.velocity.copy();
 
-    // RVO WARNING: This only works when the other agent is using RVO.
-    let alpha = 0.5;
-    // NOTE: move to VO when velocity is zero
-    alpha = boid_B.velocity.mag() / 2; // assumes max velocity of both is 1
-    this.cone_origin = p5.Vector.add(p5.Vector.mult(boid_A.velocity, alpha), p5.Vector.mult(boid_B.velocity, 1 - alpha));
+    // // RVO WARNING: This only works when the other agent is using RVO.
+    // let alpha = 0.5;
+    // // NOTE: move to VO when velocity is zero
+    // alpha = boid_B.velocity.mag() / 2; // assumes max velocity of both is 1
+    // this.cone_origin = p5.Vector.add(p5.Vector.mult(boid_A.velocity, alpha), p5.Vector.mult(boid_B.velocity, 1 - alpha));
 
     this.left_ray = p5.Vector.fromAngle(angle_to_position + cone_angle / 2);
     this.right_ray = p5.Vector.fromAngle(angle_to_position - cone_angle / 2);

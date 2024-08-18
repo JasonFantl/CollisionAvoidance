@@ -48,9 +48,9 @@ class Policies {
   static velocityObstacle(boid, boids) {
     boid.acceleration = createVector();
 
-    let goal_vector = p5.Vector.sub(boid.goal, boid.position).normalize();
+    let preferred_velocity = p5.Vector.sub(boid.goal, boid.position).normalize();
 
-    boid.nextVelocity = goal_vector; // may be overwritten later if there is an obstacle
+    boid.nextVelocity = preferred_velocity; // may be overwritten later if there is an obstacle
 
     strokeWeight(1);
     let v_scale = 40;
@@ -97,17 +97,17 @@ class Policies {
 
 
     // find a new velocity outside all the velocity obstacles. We use sampling here, but a linear program would be better
-    let best_sample_point = null;
-    let best_sample_point_score = 0.0;
-    let radius_resolution = 10;
-    let angle_resolution = 32;
-    for (let r = 0.1; r <= 1.0; r += 1.0 / radius_resolution) {
-      for (let d_theta = - 3 * PI / 4; d_theta <= 3 * PI / 4; d_theta += PI / angle_resolution) {
+    let best_sample_velocity = null;
+    let lowest_sample_penalty = 0.0;
+    let sample_magnitude_resolution = 10;
+    let sample_angle_resolution = 32;
+    for (let sample_magnitude = 0.1; sample_magnitude <= 1.0; sample_magnitude += 1.0 / sample_magnitude_resolution) {
+      for (let d_theta = -PI; d_theta <= PI; d_theta += TWO_PI / sample_angle_resolution) {
 
-        let sample_point = p5.Vector.rotate(goal_vector, d_theta).setMag(r);
+        let sample_point = p5.Vector.rotate(preferred_velocity, d_theta).setMag(sample_magnitude);
         // NOTE: Influence always passing on the left by modifying the score to be a little higher on the left. Negative for right preference
         let left_passing_influence = -0.1;
-        let sample_point_score = r * 10 - abs(d_theta + left_passing_influence / angle_resolution); // the closer to the goal_vector (r = 1.0, theta = 0) the better
+        let sample_point_score = sample_magnitude * 10 - abs(d_theta + left_passing_influence / sample_angle_resolution); // the closer to the goal_vector (r = 1.0, theta = 0) the better
 
         for (let velocity_obstacle of velocity_obstacles) {
           if (velocity_obstacle.contains(sample_point)) {
@@ -117,15 +117,15 @@ class Policies {
           }
         }
 
-        if (sample_point_score > best_sample_point_score) {
-          best_sample_point = sample_point;
-          best_sample_point_score = sample_point_score;
+        if (sample_point_score > lowest_sample_penalty) {
+          best_sample_velocity = sample_point;
+          lowest_sample_penalty = sample_point_score;
         }
       }
     }
 
-    if (best_sample_point != null) {
-      boid.nextVelocity = best_sample_point;
+    if (best_sample_velocity != null) {
+      boid.nextVelocity = best_sample_velocity;
     } else { // no valid velocities were found
       boid.nextVelocity = createVector();
     }
