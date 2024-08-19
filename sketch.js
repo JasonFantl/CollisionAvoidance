@@ -30,10 +30,12 @@ function draw() {
     if (boids[i].stuck) {
       continue;
     }
+
+    boids[i].observeVelocities(boids);
     // Policies.noCollision(boids[i]);
     // Policies.avoidClosest(boids[i], boids);
 
-    Policies.velocityObstacle(boids[i], boids);
+    Policies.velocityObstacle(i, boids);
 
     // if (i == 0) {
     //   Policies.velocityObstacle(boids[i], boids);

@@ -7,7 +7,10 @@ function collisionConeAngle(position, radius) {
 
 // relative to the position of boid_A
 class VelocityObstacle {
-  constructor(boid_A, boid_B, collision_time_threshold) {
+  constructor(boid_A_index, boid_B_index, collision_time_threshold) {
+    let boid_A = boids[boid_A_index];
+    let boid_B = boids[boid_B_index];
+
     let safety_margin_factor = 5;
     this.collision_radius = (boid_A.radius + boid_B.radius) + safety_margin_factor;
     this.collision_position = p5.Vector.sub(boid_B.position, boid_A.position);
@@ -16,14 +19,17 @@ class VelocityObstacle {
 
     // NOTE: Swap from VO to RVO
 
+    let other_velocity = boid_A.observed_velocities[boid_B_index].copy();
+    // let other_velocity = boid_B.velocity.copy();
+
     // VO
-    this.cone_origin = boid_B.velocity.copy();
+    this.cone_origin = other_velocity;
 
     // // RVO WARNING: This only works when the other agent is using RVO.
     // let alpha = 0.5;
-    // // NOTE: move to VO when velocity is zero
-    // // alpha = boid_B.velocity.mag() / 2; // assumes max velocity of both is 1
-    // this.cone_origin = p5.Vector.add(p5.Vector.mult(boid_A.velocity, alpha), p5.Vector.mult(boid_B.velocity, 1 - alpha));
+    // // NOTE: Can we get closer to VO the less responsive this person is?
+    // // this.cone_origin = p5.Vector.add(p5.Vector.mult(boid_A.velocity, alpha), p5.Vector.mult(boid_B.velocity, 1 - alpha));
+    // this.cone_origin = p5.Vector.add(p5.Vector.mult(boid_A.velocity, alpha), p5.Vector.mult(other_velocity, 1 - alpha));
 
     this.left_ray = p5.Vector.fromAngle(angle_to_position + cone_angle / 2);
     this.right_ray = p5.Vector.fromAngle(angle_to_position - cone_angle / 2);

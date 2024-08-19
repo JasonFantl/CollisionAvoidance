@@ -7,15 +7,19 @@ class Policies {
   }
 
   // pursue the goal, but push away from the closest boid
-  static avoidClosest(boid, boids) {
+  static avoidClosest(boid_index, boids) {
+    const boid = boids[boid_index];
+
     boid.acceleration = createVector(); // zero acceleration
 
     let closest_boid = null;
     let closest_boid_distance = null;
-    for (let other_boid of boids) {
-      if (other_boid == boid) {
+    for (let other_boid_index = 0; other_boid_index < boids.length; other_boid_index++) {
+      if (other_boid_index == boid_index) {
         continue;
       }
+      const other_boid = boids[other_boid_index];
+
       let other_boid_distance = p5.Vector.sub(
         boid.position,
         other_boid.position
@@ -45,52 +49,48 @@ class Policies {
     boid.nextVelocity = move_vector;
   }
 
-  static velocityObstacle(boid, boids) {
+  static velocityObstacle(boid_index, boids) {
+    const boid = boids[boid_index];
+
     boid.acceleration = createVector();
 
     let preferred_velocity = p5.Vector.sub(boid.goal, boid.position).normalize();
 
     boid.nextVelocity = preferred_velocity; // may be overwritten later if there is an obstacle
 
-    strokeWeight(1);
-    let v_scale = 40;
-    // stroke(boid.color);
-    // line(
-    //   boid.position.x,
-    //   boid.position.y,
-    //   boid.position.x + goal_vector.x * v_scale,
-    //   boid.position.y + goal_vector.y * v_scale
-    // );
+    let scale_debug_display = 40;
+    let draw_debug = true;
 
     // union all the velocity obstacles
     let velocity_obstacles = []
-    for (let other_boid of boids) {
-      if (other_boid == boid) {
+    for (let other_boid_index = 0; other_boid_index < boids.length; other_boid_index++) {
+      if (other_boid_index == boid_index) {
         continue;
       }
+      const other_boid = boids[other_boid_index];
 
-      let velocity_obstacle = new VelocityObstacle(boid, other_boid, boid.check_collisions_in_time);
+      let velocity_obstacle = new VelocityObstacle(boid_index, other_boid_index, boid.check_collisions_in_time);
       velocity_obstacles.push(velocity_obstacle);
 
-      // draw them
-      if (boid == boids[0]) {
+      // draw velocity obstacle cone
+      if (draw_debug) {
         stroke(other_boid.color);
         strokeWeight(0.5);
-        let o = p5.Vector.add(
+        let velocity_obstacle_absolute_position = p5.Vector.add(
           boid.position,
-          p5.Vector.mult(velocity_obstacle.cone_origin, v_scale)
+          p5.Vector.mult(velocity_obstacle.cone_origin, scale_debug_display)
         );
         line(
-          o.x,
-          o.y,
-          o.x + velocity_obstacle.left_ray.x * 100,
-          o.y + velocity_obstacle.left_ray.y * 100
+          velocity_obstacle_absolute_position.x,
+          velocity_obstacle_absolute_position.y,
+          velocity_obstacle_absolute_position.x + velocity_obstacle.left_ray.x * scale_debug_display,
+          velocity_obstacle_absolute_position.y + velocity_obstacle.left_ray.y * scale_debug_display
         );
         line(
-          o.x,
-          o.y,
-          o.x + velocity_obstacle.right_ray.x * 100,
-          o.y + velocity_obstacle.right_ray.y * 100
+          velocity_obstacle_absolute_position.x,
+          velocity_obstacle_absolute_position.y,
+          velocity_obstacle_absolute_position.x + velocity_obstacle.right_ray.x * scale_debug_display,
+          velocity_obstacle_absolute_position.y + velocity_obstacle.right_ray.y * scale_debug_display
         );
       }
     }
@@ -125,11 +125,11 @@ class Policies {
 
         let sample_velocity_penalty = time_to_collision_penalty + sample_velocity_alignment_penalty;
 
-        if (boid == boids[0]) {
+        // draw sampled point
+        if (draw_debug) {
           stroke(0, 0, sample_velocity_penalty * 10);
-          strokeWeight(3);
-          let s = 100;
-          point(boid.position.x + sample_velocity.x * s, boid.position.y + sample_velocity.y * s);
+          strokeWeight(1);
+          point(boid.position.x + sample_velocity.x * scale_debug_display, boid.position.y + sample_velocity.y * scale_debug_display);
         }
 
         if (sample_velocity_penalty < lowest_sample_penalty) {
@@ -145,14 +145,25 @@ class Policies {
       boid.nextVelocity = createVector();
     }
 
-    if (boid == boids[0]) {
+    // draw proffered and selected velocity
+    if (draw_debug) {
       stroke(boid.color);
+
+      strokeWeight(0.5);
+      stroke(boid.color);
+      line(
+        boid.position.x,
+        boid.position.y,
+        boid.position.x + preferred_velocity.x * scale_debug_display,
+        boid.position.y + preferred_velocity.y * scale_debug_display
+      );
+
       strokeWeight(2);
       line(
         boid.position.x,
         boid.position.y,
-        boid.position.x + boid.nextVelocity.x * v_scale,
-        boid.position.y + boid.nextVelocity.y * v_scale
+        boid.position.x + boid.nextVelocity.x * scale_debug_display,
+        boid.position.y + boid.nextVelocity.y * scale_debug_display
       );
     }
   }
