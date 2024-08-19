@@ -5,8 +5,10 @@ class Boid {
     this.nextVelocity = createVector();
 
     this.radius = 10;
+    this.max_speed = 2;
+
     this.check_collisions_in_time = 9999; // NOTE: control time to consider collisions
-    this.evasion_strength = 999999999999.0
+    this.evasion_strength = 100.0 // NOTE: control evasion strength
 
     this.observed_velocities = {};
 
@@ -31,7 +33,7 @@ class Boid {
     // verlet integration
     if (!freeze_time) {
       // NOTE: Add noise to velocity
-      this.velocity.add(p5.Vector.random2D().mult(random(0.01)));
+      this.velocity.add(p5.Vector.random2D().mult(random(0.1)));
       this.position.add(p5.Vector.mult(this.velocity, dt));
     }
 

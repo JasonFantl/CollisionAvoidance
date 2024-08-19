@@ -2,10 +2,12 @@ const goldenRatio = 1.61803398874989484820458683436;
 
 class Policies {
   // persue the goal
-  static noCollision(boid) {
+  static noCollision(boid_index, boids) {
+    const boid = boids[boid_index];
+
     boid.acceleration = createVector(); // zero acceleration
 
-    boid.nextVelocity = p5.Vector.sub(boid.goal, boid.position).normalize();
+    boid.nextVelocity = p5.Vector.sub(boid.goal, boid.position).setMag(boid.max_speed);
   }
 
   // pursue the goal, but push away from the closest boid
@@ -13,6 +15,8 @@ class Policies {
     const boid = boids[boid_index];
 
     boid.acceleration = createVector(); // zero acceleration
+
+    let preferred_velocity = p5.Vector.sub(boid.goal, boid.position).setMag(boid.max_speed);
 
     let closest_boid = null;
     let closest_boid_distance = null;
@@ -42,11 +46,9 @@ class Policies {
       closest_boid.position
     ).setMag(avoid_vector_mag);
 
-    let to_goal_vector = p5.Vector.sub(boid.goal, boid.position).normalize();
-
-    let move_vector = p5.Vector.add(to_goal_vector, avoid_vector);
-    if (move_vector.mag() > 1) {
-      move_vector.normalize();
+    let move_vector = p5.Vector.add(preferred_velocity, avoid_vector);
+    if (move_vector.mag() > boid.max_speed) {
+      move_vector.setMag(boid.max_speed);
     }
     boid.nextVelocity = move_vector;
   }
@@ -56,11 +58,11 @@ class Policies {
 
     boid.acceleration = createVector();
 
-    let preferred_velocity = p5.Vector.sub(boid.goal, boid.position).normalize();
+    let preferred_velocity = p5.Vector.sub(boid.goal, boid.position).setMag(boid.max_speed);
 
     boid.nextVelocity = preferred_velocity; // may be overwritten later if there is an obstacle
 
-    let scale_debug_display = 40;
+    let scale_debug_display = 20;
     let draw_debug = true;
 
     // union all the velocity obstacles
@@ -104,7 +106,7 @@ class Policies {
     let num_sample_points = 512;
     for (let sample_point_index = 0; sample_point_index < num_sample_points; sample_point_index++) {
       let sample_angle = sample_point_index * goldenRatio;
-      let sample_magnitude = sqrt(sample_point_index / num_sample_points);
+      let sample_magnitude = sqrt(sample_point_index / num_sample_points) * boid.max_speed;
       let sample_velocity = p5.Vector.fromAngle(sample_angle).mult(sample_magnitude);
 
       let sample_velocity_alignment_penalty = p5.Vector.dist(sample_velocity, preferred_velocity);
