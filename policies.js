@@ -1,3 +1,5 @@
+const goldenRatio = 1.61803398874989484820458683436;
+
 class Policies {
   // persue the goal
   static noCollision(boid) {
@@ -99,43 +101,41 @@ class Policies {
     // find a new velocity outside all the velocity obstacles. We use sampling here, but a linear program would be better
     let best_sample_velocity = null;
     let lowest_sample_penalty = Infinity;
-    let sample_magnitude_resolution = 10;
-    let sample_angle_resolution = 64;
-    for (let sample_magnitude = 0.0; sample_magnitude <= 1.0; sample_magnitude += 1.0 / sample_magnitude_resolution) {
-      for (let sample_angle = -PI; sample_angle <= PI; sample_angle += TWO_PI / sample_angle_resolution) {
+    let num_sample_points = 512;
+    for (let sample_point_index = 0; sample_point_index < num_sample_points; sample_point_index++) {
+      let sample_angle = sample_point_index * goldenRatio;
+      let sample_magnitude = sqrt(sample_point_index / num_sample_points);
+      let sample_velocity = p5.Vector.fromAngle(sample_angle).mult(sample_magnitude);
 
-        let sample_velocity = p5.Vector.fromAngle(sample_angle).mult(sample_magnitude);
+      let sample_velocity_alignment_penalty = p5.Vector.dist(sample_velocity, preferred_velocity);
 
-        let sample_velocity_alignment_penalty = p5.Vector.dist(sample_velocity, preferred_velocity);
-
-        let time_to_collision_penalty = 0;
-        let closest_time_to_collision = Infinity;
-        for (let velocity_obstacle of velocity_obstacles) {
-          if (velocity_obstacle.contains(sample_velocity)) {
-            let estimated_distance = velocity_obstacle.collision_position.mag() - velocity_obstacle.collision_radius;
-            let estimated_speed = p5.Vector.sub(sample_velocity, velocity_obstacle.cone_origin).mag();
-            closest_time_to_collision = min(closest_time_to_collision, estimated_distance / estimated_speed);
-          }
+      let time_to_collision_penalty = 0;
+      let closest_time_to_collision = Infinity;
+      for (let velocity_obstacle of velocity_obstacles) {
+        if (velocity_obstacle.contains(sample_velocity)) {
+          let estimated_distance = velocity_obstacle.collision_position.mag() - velocity_obstacle.collision_radius;
+          let estimated_speed = p5.Vector.sub(sample_velocity, velocity_obstacle.cone_origin).mag();
+          closest_time_to_collision = min(closest_time_to_collision, estimated_distance / estimated_speed);
         }
-        if (closest_time_to_collision > 0) {
-          time_to_collision_penalty = boid.evasion_strength / closest_time_to_collision;
-        } else {
-          time_to_collision_penalty = Infinity;
-        }
+      }
+      if (closest_time_to_collision > 0) {
+        time_to_collision_penalty = boid.evasion_strength / closest_time_to_collision;
+      } else {
+        time_to_collision_penalty = Infinity;
+      }
 
-        let sample_velocity_penalty = time_to_collision_penalty + sample_velocity_alignment_penalty;
+      let sample_velocity_penalty = time_to_collision_penalty + sample_velocity_alignment_penalty;
 
-        // draw sampled point
-        if (draw_debug) {
-          stroke(0, 0, sample_velocity_penalty * 10);
-          strokeWeight(1);
-          point(boid.position.x + sample_velocity.x * scale_debug_display, boid.position.y + sample_velocity.y * scale_debug_display);
-        }
+      // draw sampled point
+      if (draw_debug) {
+        stroke(0, 0, sample_velocity_penalty * 10);
+        strokeWeight(1);
+        point(boid.position.x + sample_velocity.x * scale_debug_display, boid.position.y + sample_velocity.y * scale_debug_display);
+      }
 
-        if (sample_velocity_penalty < lowest_sample_penalty) {
-          best_sample_velocity = sample_velocity;
-          lowest_sample_penalty = sample_velocity_penalty;
-        }
+      if (sample_velocity_penalty < lowest_sample_penalty) {
+        best_sample_velocity = sample_velocity;
+        lowest_sample_penalty = sample_velocity_penalty;
       }
     }
 
