@@ -98,28 +98,43 @@ class Policies {
 
     // find a new velocity outside all the velocity obstacles. We use sampling here, but a linear program would be better
     let best_sample_velocity = null;
-    let lowest_sample_penalty = 0.0;
+    let lowest_sample_penalty = Infinity;
     let sample_magnitude_resolution = 10;
-    let sample_angle_resolution = 32;
-    for (let sample_magnitude = 0.1; sample_magnitude <= 1.0; sample_magnitude += 1.0 / sample_magnitude_resolution) {
-      for (let d_theta = -PI; d_theta <= PI; d_theta += TWO_PI / sample_angle_resolution) {
+    let sample_angle_resolution = 64;
+    for (let sample_magnitude = 0.0; sample_magnitude <= 1.0; sample_magnitude += 1.0 / sample_magnitude_resolution) {
+      for (let sample_angle = -PI; sample_angle <= PI; sample_angle += TWO_PI / sample_angle_resolution) {
 
-        let sample_point = p5.Vector.rotate(preferred_velocity, d_theta).setMag(sample_magnitude);
-        // NOTE: Influence always passing on the left by modifying the score to be a little higher on the left. Negative for right preference
-        let left_passing_influence = -0.1;
-        let sample_point_score = sample_magnitude * 10 - abs(d_theta + left_passing_influence / sample_angle_resolution); // the closer to the goal_vector (r = 1.0, theta = 0) the better
+        let sample_velocity = p5.Vector.fromAngle(sample_angle).mult(sample_magnitude);
 
+        let sample_velocity_alignment_penalty = p5.Vector.dist(sample_velocity, preferred_velocity);
+
+        let time_to_collision_penalty = 0;
+        let closest_time_to_collision = Infinity;
         for (let velocity_obstacle of velocity_obstacles) {
-          if (velocity_obstacle.contains(sample_point)) {
-            // NOTE: we can include time-to-collision in the score here
-            sample_point_score = -1;
-            break;
+          if (velocity_obstacle.contains(sample_velocity)) {
+            let estimated_distance = velocity_obstacle.collision_position.mag() - velocity_obstacle.collision_radius;
+            let estimated_speed = p5.Vector.sub(sample_velocity, velocity_obstacle.cone_origin).mag();
+            closest_time_to_collision = min(closest_time_to_collision, estimated_distance / estimated_speed);
           }
         }
+        if (closest_time_to_collision > 0) {
+          time_to_collision_penalty = boid.evasion_strength / closest_time_to_collision;
+        } else {
+          time_to_collision_penalty = Infinity;
+        }
 
-        if (sample_point_score > lowest_sample_penalty) {
-          best_sample_velocity = sample_point;
-          lowest_sample_penalty = sample_point_score;
+        let sample_velocity_penalty = time_to_collision_penalty + sample_velocity_alignment_penalty;
+
+        if (boid == boids[0]) {
+          stroke(0, 0, sample_velocity_penalty * 10);
+          strokeWeight(3);
+          let s = 100;
+          point(boid.position.x + sample_velocity.x * s, boid.position.y + sample_velocity.y * s);
+        }
+
+        if (sample_velocity_penalty < lowest_sample_penalty) {
+          best_sample_velocity = sample_velocity;
+          lowest_sample_penalty = sample_velocity_penalty;
         }
       }
     }
