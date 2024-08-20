@@ -12,8 +12,8 @@ function setup() {
   // populate the grid with boids
   // initializeRightAnglePair();
   // initializeStraightOnPair();
-  initializeCircle(12);
-  // initializeRandom(20);
+  // initializeCircle(12);
+  initializeRandom(5);
   // initializeObstacle();
 }
 
@@ -27,21 +27,12 @@ function draw() {
 
 
   for (let i = 0; i < boids.length; i++) {
-    if (boids[i].stuck) {
-      continue;
-    }
 
     boids[i].observeVelocities(boids);
+
     // Policies.noCollision(boids[i]);
     // Policies.avoidClosest(boids[i], boids);
-
-    Policies.velocityObstacle(i, boids);
-
-    // if (i == 0) {
-    //   Policies.velocityObstacle(boids[i], boids);
-    // } else {
-    //   Policies.noCollision(boids[i]);
-    // }
+    Policies.velocityObstacle(i, boids, draw_debug = true);
   }
 
   for (let i = 0; i < boids.length; i++) {

@@ -1,57 +1,65 @@
 class Boid {
-  constructor(positon, goal, color) {
-    this.position = positon;
+  constructor(position, goal, color, evasion_strength = 50.0, check_collisions_in_time = 99999) {
+    this.position = position;
     this.velocity = goal.copy().normalize();
     this.nextVelocity = createVector();
 
     this.radius = 10;
     this.max_speed = 2;
 
-    this.check_collisions_in_time = 9999; // NOTE: control time to consider collisions
-    this.evasion_strength = 100.0 // NOTE: control evasion strength
+    this.check_collisions_in_time = check_collisions_in_time; // NOTE: control time to consider collisions
+    this.evasion_strength = evasion_strength;
 
     this.observed_velocities = {};
+    this.observed_velocities_smoothing_factor = 0.1;
 
     this.goal = goal;
     this.color = color;
     this.trail = [];
 
     this.collided = false;
+    this.at_goal = false;
+
   }
 
   move() {
-
-    if (dist(this.position.x, this.position.y, this.goal.x, this.goal.y) < this.radius / 2) {
-      this.nextVelocity = createVector();
-    }
 
     // NOTE: Update the velocities in response to each other slowly
     if (frameCount % 1 == 0) {
       this.velocity = this.nextVelocity;
     }
 
-    // verlet integration
-    if (!freeze_time) {
-      // NOTE: Add noise to velocity
-      this.velocity.add(p5.Vector.random2D().mult(random(0.1)));
-      this.position.add(p5.Vector.mult(this.velocity, dt));
-    }
+    if (!this.at_goal) {
+      // verlet integration
+      if (!freeze_time) {
+        // NOTE: Add noise to velocity
+        this.velocity.add(p5.Vector.random2D().mult(random(0.1)));
+        this.position.add(p5.Vector.mult(this.velocity, dt));
+      }
 
-    if (frameCount % 5 == 0) {
-      this.trail.push(this.position.copy());
-      if (this.trail.length > 100) {
-        this.trail.shift();
+      if (dist(this.position.x, this.position.y, this.goal.x, this.goal.y) < this.radius / 2) {
+        this.at_goal = true;
+      }
+
+      if (frameCount % 5 == 0) {
+        this.trail.push(this.position.copy());
+        if (this.trail.length > 100) {
+          this.trail.shift();
+        }
       }
     }
   }
 
   draw() {
+
     fill(this.color);
     noStroke();
+
     if (this.collided) {
-      strokeWeight(2);
-      stroke(200, 255, 255);
+      strokeWeight(3);
+      stroke(0, 0, 100);
     }
+
     circle(this.position.x, this.position.y, this.radius * 2);
 
     strokeWeight(1);
@@ -66,7 +74,6 @@ class Boid {
   }
 
   observeVelocities(boids) {
-    const alpha = 0.1; // Smoothing factor
 
     for (let other_boid_index = 0; other_boid_index < boids.length; other_boid_index++) {
       const other_boid = boids[other_boid_index];
@@ -78,8 +85,8 @@ class Boid {
       let previous_average = this.observed_velocities[other_boid_index] || other_boid.velocity.copy();
 
       // Calculate the new average using correct vector operations
-      let weighted_current = p5.Vector.mult(other_boid.velocity, alpha);
-      let weighted_previous = p5.Vector.mult(previous_average, 1 - alpha);
+      let weighted_current = p5.Vector.mult(other_boid.velocity, this.observed_velocities_smoothing_factor);
+      let weighted_previous = p5.Vector.mult(previous_average, 1 - this.observed_velocities_smoothing_factor);
 
       // Apply rolling average by adding the weighted vectors
       let new_average = p5.Vector.add(weighted_current, weighted_previous);

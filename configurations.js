@@ -7,11 +7,11 @@ function initializeCircle(num_boids) {
   }
 }
 
-function initializeStraightOnPair(num_boids) {
+function initializeStraightOnPair() {
   initializeCircle(2);
 }
 
-function initializeRightAnglePair(num_boids) {
+function initializeRightAnglePair() {
   for (let i = 0; i < 2; i++) {
     let start_vector = p5.Vector.fromAngle(TWO_PI * i / 4).mult(width / 2.5);
     let goal_vector = p5.Vector.fromAngle(TWO_PI * i / 4).mult(-width / 2.5);
@@ -30,10 +30,8 @@ function initializeRandom(num_boids) {
 }
 
 function initializeObstacle() {
-  let start_vector = createVector(200, 0);
-  let goal_vector = createVector(-200, 0);
+  let start_vector = createVector(width / 4, 0);
+  let goal_vector = createVector(-width / 4, 0);
   boids[0] = new Boid(start_vector, goal_vector, color(255, 255, 255));
   boids[1] = new Boid(createVector(), createVector(), color(100, 255, 255));
-  boids[1].stuck = true;
-
 }

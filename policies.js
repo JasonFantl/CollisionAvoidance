@@ -17,6 +17,9 @@ class Policies {
     boid.acceleration = createVector(); // zero acceleration
 
     let preferred_velocity = p5.Vector.sub(boid.goal, boid.position).setMag(boid.max_speed);
+    if (boid.at_goal) {
+      preferred_velocity = createVector();
+    }
 
     let closest_boid = null;
     let closest_boid_distance = null;
@@ -53,17 +56,19 @@ class Policies {
     boid.nextVelocity = move_vector;
   }
 
-  static velocityObstacle(boid_index, boids) {
+  static velocityObstacle(boid_index, boids, draw_debug = false) {
     const boid = boids[boid_index];
 
     boid.acceleration = createVector();
 
     let preferred_velocity = p5.Vector.sub(boid.goal, boid.position).setMag(boid.max_speed);
+    if (boid.at_goal) {
+      preferred_velocity = createVector();
+    }
 
     boid.nextVelocity = preferred_velocity; // may be overwritten later if there is an obstacle
 
     let scale_debug_display = 20;
-    let draw_debug = true;
 
     // union all the velocity obstacles
     let velocity_obstacles = []
