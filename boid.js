@@ -1,17 +1,17 @@
 class Boid {
-  constructor(position, goal, color, evasion_strength = 50.0, check_collisions_in_time = 99999) {
+  constructor(position, goal, color, radius = 10, max_speed = 2, evasion_strength = 50.0, check_collisions_in_time = 99999) {
     this.position = position;
     this.velocity = goal.copy().normalize();
     this.nextVelocity = createVector();
 
-    this.radius = 10;
-    this.max_speed = 2;
+    this.radius = radius;
+    this.max_speed = max_speed;
 
     this.check_collisions_in_time = check_collisions_in_time; // NOTE: control time to consider collisions
     this.evasion_strength = evasion_strength;
 
     this.observed_velocities = {};
-    this.observed_velocities_smoothing_factor = 0.1;
+    this.observed_velocities_smoothing_velocity = createVector();
 
     this.goal = goal;
     this.color = color;
@@ -84,15 +84,22 @@ class Boid {
 
       let previous_average = this.observed_velocities[other_boid_index] || other_boid.velocity.copy();
 
-      // Calculate the new average using correct vector operations
-      let weighted_current = p5.Vector.mult(other_boid.velocity, this.observed_velocities_smoothing_factor);
-      let weighted_previous = p5.Vector.mult(previous_average, 1 - this.observed_velocities_smoothing_factor);
-
-      // Apply rolling average by adding the weighted vectors
-      let new_average = p5.Vector.add(weighted_current, weighted_previous);
-
-      // Update observed velocity with the new average
-      this.observed_velocities[other_boid_index] = new_average;
+      let k = 0.1;
+      let damping_factor = 2 * sqrt(k);
+      let force = p5.Vector.mult(
+        this.observed_velocities_smoothing_velocity,
+        -damping_factor
+      ).sub(
+        p5.Vector.sub(
+          previous_average,
+          other_boid.velocity
+        ).mult(k)
+      );
+      this.observed_velocities_smoothing_velocity.add(force.mult(dt));
+      this.observed_velocities[other_boid_index] = p5.Vector.add(
+        previous_average,
+        p5.Vector.mult(this.observed_velocities_smoothing_velocity, dt)
+      );
     }
   }
 
