@@ -6,7 +6,7 @@ const Policies = {
     name: "no collision",
     run: (boid_index, boids) => {
       const boid = boids[boid_index];
-      boid.next_velocity = p5.Vector.sub(boid.goal, boid.position).setMag(boid.max_speed);
+      boid.target_velocity = p5.Vector.sub(boid.goal, boid.position).setMag(boid.max_speed);
     }
   },
 
@@ -39,7 +39,7 @@ const Policies = {
         move_vector.setMag(boid.max_speed);
       }
 
-      boid.next_velocity = move_vector;
+      boid.target_velocity = move_vector;
     }
   },
 
@@ -79,7 +79,7 @@ const Policies = {
         }
       }
 
-      boid.next_velocity = findBestSampleVelocity(preferred_velocity, velocity_obstacles, boid, draw_debug);
+      boid.target_velocity = findBestSampleVelocity(preferred_velocity, velocity_obstacles, boid, draw_debug);
 
       // draw preferred and selected velocity
       if (draw_debug) {
@@ -98,8 +98,8 @@ const Policies = {
         line(
           boid.position.x,
           boid.position.y,
-          boid.position.x + boid.next_velocity.x * scale_debug_display,
-          boid.position.y + boid.next_velocity.y * scale_debug_display
+          boid.position.x + boid.target_velocity.x * scale_debug_display,
+          boid.position.y + boid.target_velocity.y * scale_debug_display
         );
       }
     }
@@ -108,7 +108,7 @@ const Policies = {
 
 // Helper function for velocity sampling (refactored from velocityObstacle)
 function findBestSampleVelocity(preferred_velocity, velocity_obstacles, boid, draw_debug) {
-  let best_sample_velocity = null;
+  let best_sample_velocity = createVector();
   let lowest_sample_penalty = Infinity;
 
   for (let sample_point_index = 0; sample_point_index < boid.viewing_resolution; sample_point_index++) {

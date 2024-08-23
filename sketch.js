@@ -11,14 +11,15 @@ function setup() {
   createCanvas(300, 300);
   colorMode(HSB, 255);
   frameRate(30);
-  randomSeed(0);
 
-  live_config = Configurations.circle_avoidClosest
-  boids = live_config.initialization.initialize();
+  live_config = Configurations.circle_velocityObject
 
   // runExperiments(live_config, 1);
   // runExperiments(Configurations.circle_avoidClosest, 10);
   // runExperiments(Configurations.circle_velocityObject, 10);
+
+  randomSeed(0);
+  boids = live_config.initialization.initialize();
 }
 
 let freeze_time = false
@@ -31,9 +32,7 @@ function draw() {
 
 
   for (let i = 0; i < boids.length; i++) {
-
-    boids[i].observeVelocities(boids);
-
+    if (boids[i].collided) continue;
     live_config.policy.run(i, boids, draw_debug = true);
   }
 

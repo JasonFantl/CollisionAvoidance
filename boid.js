@@ -2,7 +2,8 @@ class Boid {
   constructor(position, goal, color, radius = 10, max_speed = 2, evasion_strength = 50.0, check_collisions_in_time = 99999) {
     this.position = position;
     this.velocity = goal.copy().setMag(max_speed);
-    this.next_velocity = this.velocity.copy();
+    this.target_velocity = this.velocity.copy();
+    this.acceleration = createVector(); // for dampening
 
     this.radius = radius;
     this.max_speed = max_speed;
@@ -10,9 +11,6 @@ class Boid {
 
     this.check_collisions_in_time = check_collisions_in_time; // NOTE: control time to consider collisions
     this.evasion_strength = evasion_strength;
-
-    this.observed_velocities = {};
-    this.observed_velocities_smoothing_velocity = createVector();
 
     this.goal = goal;
     this.color = color;
@@ -22,16 +20,31 @@ class Boid {
   }
 
   move() {
-    if (this.at_goal) {
-      this.next_velocity = createVector(); // zero vector
-    }
+    if (this.at_goal || this.collided) {
+      this.target_velocity = createVector(); // zero vector
+      this.velocity = createVector(); // zero vector
+    } else {
 
-    // NOTE: Update the velocities in response to each other slowly
-    if (frameCount % 1 == 0) {
-      this.velocity = this.next_velocity;
-    }
+      // NOTE: Update the velocities in response to each other slowly
+      if (frameCount % 1 == 0) {
 
-    if (!this.at_goal) {
+        // critically dampoed oscillator smoothing
+
+        let k = 0.3;
+        let damping_factor = 2 * sqrt(k);
+        let acceleration_delta = p5.Vector.mult(
+          this.acceleration,
+          -damping_factor
+        ).sub(
+          p5.Vector.sub(
+            this.velocity,
+            this.target_velocity
+          ).mult(k)
+        );
+        this.acceleration.add(acceleration_delta.mult(dt));
+        this.velocity.add(p5.Vector.mult(this.acceleration, dt));
+      }
+
       // verlet integration
       if (!freeze_time) {
         this.velocity.add(p5.Vector.fromAngle(random(TWO_PI)).mult(random(0.1))); // NOTE: Add noise to velocity
@@ -42,11 +55,11 @@ class Boid {
         this.at_goal = true;
       }
 
-      if (frameCount % 5 == 0) {
-        this.trail.push(this.position.copy());
-        if (this.trail.length > 100) {
-          this.trail.shift();
-        }
+    }
+    if (frameCount % 5 == 0) {
+      this.trail.push(this.position.copy());
+      if (this.trail.length > 100) {
+        this.trail.shift();
       }
     }
   }
@@ -72,35 +85,5 @@ class Boid {
       vertex(this.trail[i].x, this.trail[i].y);
     }
     endShape();
-  }
-
-  observeVelocities(boids) {
-
-    for (let other_boid_index = 0; other_boid_index < boids.length; other_boid_index++) {
-      const other_boid = boids[other_boid_index];
-
-      if (other_boid === this) {
-        continue;
-      }
-
-      let previous_average = this.observed_velocities[other_boid_index] || other_boid.velocity.copy();
-
-      let k = 0.1;
-      let damping_factor = 2 * sqrt(k);
-      let force = p5.Vector.mult(
-        this.observed_velocities_smoothing_velocity,
-        -damping_factor
-      ).sub(
-        p5.Vector.sub(
-          previous_average,
-          other_boid.velocity
-        ).mult(k)
-      );
-      this.observed_velocities_smoothing_velocity.add(force.mult(dt));
-      this.observed_velocities[other_boid_index] = p5.Vector.add(
-        previous_average,
-        p5.Vector.mult(this.observed_velocities_smoothing_velocity, dt)
-      );
-    }
   }
 }

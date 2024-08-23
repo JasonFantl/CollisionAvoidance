@@ -13,7 +13,7 @@ function runExperiment(config) {
     timeTaken++;
     if (timeTaken > 1000) {
       print("WARNING:: Failed to finish the experiment!")
-      break;
+      return "Timeout";
     }
 
     for (let i = 0; i < boids.length; i++) {
@@ -26,10 +26,7 @@ function runExperiment(config) {
 
       for (let j = i + 1; j < boids.length; j++) {
         if (dist(boids[i].position.x, boids[i].position.y, boids[j].position.x, boids[j].position.y) < boids[i].radius + boids[j].radius) {
-          boids[i].collided = true;
-          boids[j].collided = true;
-          times[i] = "collided";
-          times[j] = "collided";
+          return "Collision"
         }
       }
 
@@ -55,10 +52,9 @@ function runExperiments(config, numExperiments) {
 }
 
 function saveResults(config, results) {
-  let config_name = extractNameFromConfig(config);
-  const filename = `${config_name}-results.json`;
+  const filename = `${config.name()}-results.json`;
 
   save(results, filename);
 
-  console.log(`Results saved for ${config_name}: ${filename}`);
+  console.log(`Results saved for ${config.name()}: ${filename}`);
 }

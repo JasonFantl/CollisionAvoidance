@@ -19,7 +19,7 @@ class VelocityObstacle {
 
     // NOTE: Swap from VO to RVO
 
-    let other_velocity = boid_A.observed_velocities[boid_B_index].copy();
+    let other_velocity = boid_B.velocity.copy();
     // let other_velocity = boid_B.velocity.copy();
 
     // VO
