@@ -28,7 +28,7 @@ const Policies = {
         }
       }
 
-      let avoid_vector_mag = 2 * (boid.radius + closest_boid.radius) * boid.max_speed / closest_boid_distance;
+      let avoid_vector_mag = boid.evasion_strength * (boid.radius + closest_boid.radius) * boid.max_speed / closest_boid_distance;
       let avoid_vector = p5.Vector.sub(boid.position, closest_boid.position).setMag(avoid_vector_mag);
 
       let move_vector = p5.Vector.add(preferred_velocity, avoid_vector);

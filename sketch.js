@@ -1,25 +1,29 @@
 
 let dt = 1.0;
 
-let boids = [];
-
 const goldenRatio = 1.61803398874989484820458683436;
 
-let live_config;
+let experiment;
 
 function setup() {
   createCanvas(300, 300);
   colorMode(HSB, 255);
   frameRate(30);
 
-  live_config = Configurations.circle_velocityObject;
+  // experiment = new Experiment(Initializations.circle(20), Policies.avoidClosest, 2.2);
+  experiment = new Experiment(Initializations.straightOnPair(), Policies.avoidClosest, 1.5);
 
-  // runExperiments(live_config, 1);
-  // runExperiments(Configurations.circle_avoidClosest, 10);
+  runExperiments(experiment, 10);
+  // runExperiments(new Experiment(Initializations.circle(10), Policies.avoidClosest, 2.0), 10);
   // runExperiments(Configurations.circle_velocityObject, 10);
 
-  randomSeed(0);
-  boids = live_config.initialization.initialize();
+  // runExperiments(new Experiment(Initializations.circle(10), Policies.noCollision), 10);
+  // runExperiments(new Experiment(Initializations.circle(10), Policies.avoidClosest, 2.0), 10);
+  // runExperiments(new Experiment(Initializations.circle(10), Policies.velocityObstacle, 50.0), 10);
+  // runExperiments(new Experiment(Initializations.circle(10), Policies.velocityObstacle, 100.0), 10);
+  // runExperiments(new Experiment(Initializations.circle(10), Policies.velocityObstacle, "adaptive"), 10);
+
+  experiment.initialize(0);
 }
 
 let freeze_time = false
@@ -30,24 +34,21 @@ function draw() {
 
   freeze_time = keyIsPressed;
 
-  for (const boid of boids) {
-    if (boid.collided || boid.at_goal) continue;
-    live_config.policy.run(boid, boids, draw_debug = true);
-  }
+  experiment.step();
 
-  for (let i = 0; i < boids.length; i++) {
-    boids[i].move();
-    boids[i].draw();
+  // draw the experiment
+  for (let i = 0; i < experiment.boids.length; i++) {
+    experiment.boids[i].draw();
 
-    for (let j = i + 1; j < boids.length; j++) {
-      if (dist(boids[i].position.x, boids[i].position.y, boids[j].position.x, boids[j].position.y) < boids[i].radius + boids[j].radius) {
-        boids[i].collided = true;
-        boids[j].collided = true;
+    for (let j = i + 1; j < experiment.boids.length; j++) {
+      if (experiment.boids[i].position.dist(experiment.boids[j].position) < experiment.boids[i].radius + experiment.boids[j].radius) {
+        experiment.boids[i].collided = true;
+        experiment.boids[j].collided = true;
       }
     }
   }
 }
 
 function mousePressed() {
-  boids[0].goal = createVector(mouseX - width / 2, mouseY - height / 2);
+  experiment.boids[0].goal = createVector(mouseX - width / 2, mouseY - height / 2);
 }
