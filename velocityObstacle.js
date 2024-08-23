@@ -7,7 +7,7 @@ function collisionConeAngle(position, radius) {
 
 // relative to the position of boid_A
 class VelocityObstacle {
-  constructor(boid_A_index, boid_B_index, collision_time_threshold) {
+  constructor(boid_A_index, boid_B_index, boids, collision_time_threshold) {
     let boid_A = boids[boid_A_index];
     let boid_B = boids[boid_B_index];
 

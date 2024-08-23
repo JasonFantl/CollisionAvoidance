@@ -3,18 +3,22 @@ let dt = 1.0;
 
 let boids = [];
 
+const goldenRatio = 1.61803398874989484820458683436;
+
+let live_config;
+
 function setup() {
   createCanvas(300, 300);
   colorMode(HSB, 255);
   frameRate(30);
   randomSeed(0);
 
-  // populate the grid with boids
-  // initializeRightAnglePair();
-  // initializeStraightOnPair();
-  // initializeCircle(12);
-  initializeRandom(5);
-  // initializeObstacle();
+  live_config = Configurations.circle_avoidClosest
+  boids = live_config.initialization.initialize();
+
+  // runExperiments(live_config, 1);
+  // runExperiments(Configurations.circle_avoidClosest, 10);
+  // runExperiments(Configurations.circle_velocityObject, 10);
 }
 
 let freeze_time = false
@@ -30,9 +34,7 @@ function draw() {
 
     boids[i].observeVelocities(boids);
 
-    // Policies.noCollision(boids[i]);
-    // Policies.avoidClosest(boids[i], boids);
-    Policies.velocityObstacle(i, boids, draw_debug = true);
+    live_config.policy.run(i, boids, draw_debug = true);
   }
 
   for (let i = 0; i < boids.length; i++) {

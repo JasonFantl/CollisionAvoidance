@@ -1,37 +1,29 @@
-function initializeCircle(num_boids) {
-  for (let i = 0; i < num_boids; i++) {
-    let start_vector = p5.Vector.fromAngle(TWO_PI * i / num_boids).mult(width / 2.5);
-    let goal_vector = p5.Vector.fromAngle(TWO_PI * i / num_boids).mult(-width / 2.5);
 
-    boids[i] = new Boid(start_vector, goal_vector, color((255 * i / num_boids + 140) % 255, 255, 255));
-  }
-}
+const Configurations = {
+    circle_noCollision: {
+        initialization: Initializations.circle(10),
+        policy: Policies.noCollision,
+        evasion_strength: null
+    },
+    circle_avoidClosest: {
+        initialization: Initializations.circle(20),
+        policy: Policies.avoidClosest,
+        evasion_strength: null
+    },
+    circle_velocityObject: {
+        initialization: Initializations.circle(10),
+        policy: Policies.velocityObstacle,
+        evasion_strength: 50.0
+    },
+    circle_velocityObject_evasive: {
+        initialization: Initializations.circle(10),
+        policy: Policies.velocityObstacle,
+        evasion_strength: 100.0
+    },
+    // Add more configurations here...
+};
 
-function initializeStraightOnPair() {
-  initializeCircle(2);
-}
-
-function initializeRightAnglePair() {
-  for (let i = 0; i < 2; i++) {
-    let start_vector = p5.Vector.fromAngle(TWO_PI * i / 4).mult(width / 2.5);
-    let goal_vector = p5.Vector.fromAngle(TWO_PI * i / 4).mult(-width / 2.5);
-
-    boids[i] = new Boid(start_vector, goal_vector, color(255 * i / 2, 255, 255));
-  }
-}
-
-function initializeRandom(num_boids) {
-  for (let i = 0; i < num_boids; i++) {
-    let start_vector = createVector(random(width) - width / 2, random(height) - height / 2);
-    let goal_vector = createVector(random(width) - width / 2, random(height) - height / 2);
-
-    boids[i] = new Boid(start_vector, goal_vector, color(255 * i / num_boids, 255, 255));
-  }
-}
-
-function initializeObstacle() {
-  let start_vector = createVector(width / 4, 0);
-  let goal_vector = createVector(-width / 4, 0);
-  boids[0] = new Boid(start_vector, goal_vector, color(255, 255, 255));
-  boids[1] = new Boid(createVector(), createVector(), color(100, 255, 255));
+function extractNameFromConfig(config) {
+    let maybe_evasion_string = config.evasion_strength != null ? `-evasion ${config.evasion_strength}` : '';
+    return `${config.initialization.num_boids} nodes-${config.initialization.name}-${config.policy.name}${maybe_evasion_string}`;
 }

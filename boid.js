@@ -1,11 +1,12 @@
 class Boid {
   constructor(position, goal, color, radius = 10, max_speed = 2, evasion_strength = 50.0, check_collisions_in_time = 99999) {
     this.position = position;
-    this.velocity = goal.copy().normalize();
-    this.nextVelocity = createVector();
+    this.velocity = goal.copy().setMag(max_speed);
+    this.next_velocity = this.velocity.copy();
 
     this.radius = radius;
     this.max_speed = max_speed;
+    this.viewing_resolution = 512;
 
     this.check_collisions_in_time = check_collisions_in_time; // NOTE: control time to consider collisions
     this.evasion_strength = evasion_strength;
@@ -16,24 +17,24 @@ class Boid {
     this.goal = goal;
     this.color = color;
     this.trail = [];
-
     this.collided = false;
     this.at_goal = false;
-
   }
 
   move() {
+    if (this.at_goal) {
+      this.next_velocity = createVector(); // zero vector
+    }
 
     // NOTE: Update the velocities in response to each other slowly
     if (frameCount % 1 == 0) {
-      this.velocity = this.nextVelocity;
+      this.velocity = this.next_velocity;
     }
 
     if (!this.at_goal) {
       // verlet integration
       if (!freeze_time) {
-        // NOTE: Add noise to velocity
-        this.velocity.add(p5.Vector.random2D().mult(random(0.1)));
+        this.velocity.add(p5.Vector.fromAngle(random(TWO_PI)).mult(random(0.1))); // NOTE: Add noise to velocity
         this.position.add(p5.Vector.mult(this.velocity, dt));
       }
 
@@ -102,5 +103,4 @@ class Boid {
       );
     }
   }
-
 }
