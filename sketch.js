@@ -12,7 +12,7 @@ function setup() {
   colorMode(HSB, 255);
   frameRate(30);
 
-  live_config = Configurations.circle_velocityObject
+  live_config = Configurations.circle_velocityObject;
 
   // runExperiments(live_config, 1);
   // runExperiments(Configurations.circle_avoidClosest, 10);
@@ -30,10 +30,9 @@ function draw() {
 
   freeze_time = keyIsPressed;
 
-
-  for (let i = 0; i < boids.length; i++) {
-    if (boids[i].collided) continue;
-    live_config.policy.run(i, boids, draw_debug = true);
+  for (const boid of boids) {
+    if (boid.collided || boid.at_goal) continue;
+    live_config.policy.run(boid, boids, draw_debug = true);
   }
 
   for (let i = 0; i < boids.length; i++) {

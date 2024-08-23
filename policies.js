@@ -4,25 +4,22 @@ const scale_debug_display = 20;
 const Policies = {
   noCollision: {
     name: "no collision",
-    run: (boid_index, boids) => {
-      const boid = boids[boid_index];
+    run: (boid, boids) => {
       boid.target_velocity = p5.Vector.sub(boid.goal, boid.position).setMag(boid.max_speed);
     }
   },
 
   avoidClosest: {
     name: "avoid closest",
-    run: (boid_index, boids) => {
-      const boid = boids[boid_index];
+    run: (boid, boids) => {
 
       let preferred_velocity = p5.Vector.sub(boid.goal, boid.position).setMag(boid.max_speed);
 
       let closest_boid = null;
       let closest_boid_distance = Infinity;
-      for (let other_boid_index = 0; other_boid_index < boids.length; other_boid_index++) {
-        if (other_boid_index === boid_index) continue;
+      for (const other_boid of boids) {
+        if (other_boid == boid) continue;
 
-        const other_boid = boids[other_boid_index];
         let other_boid_distance = boid.position.dist(other_boid.position);
 
         if (other_boid_distance < closest_boid_distance) {
@@ -45,20 +42,18 @@ const Policies = {
 
   velocityObstacle: {
     name: "velocity obstacle",
-    run: (boid_index, boids, draw_debug = false) => {
-      const boid = boids[boid_index];
-
+    run: (boid, boids, draw_debug = false) => {
       let preferred_velocity = p5.Vector.sub(boid.goal, boid.position).setMag(boid.max_speed);
 
       let velocity_obstacles = [];
-      for (let other_boid_index = 0; other_boid_index < boids.length; other_boid_index++) {
-        if (other_boid_index === boid_index) continue;
+      for (const other_boid of boids) {
+        if (other_boid == boid) continue;
 
-        let velocity_obstacle = new VelocityObstacle(boid_index, other_boid_index, boids, boid.check_collisions_in_time);
+        let velocity_obstacle = new VelocityObstacle(boid, other_boid, boid.check_collisions_in_time);
         velocity_obstacles.push(velocity_obstacle);
 
         if (draw_debug) {
-          stroke(boids[other_boid_index].color);
+          stroke(other_boid.color);
           strokeWeight(0.5);
           let velocity_obstacle_absolute_position = p5.Vector.add(
             boid.position,
@@ -147,7 +142,7 @@ function calculatePenaltyForSampleVelocity(sample_velocity, preferred_velocity, 
   let time_to_collision_penalty = 0;
   let closest_time_to_collision = Infinity;
 
-  for (let velocity_obstacle of velocity_obstacles) {
+  for (const velocity_obstacle of velocity_obstacles) {
     if (velocity_obstacle.contains(sample_velocity)) {
       let estimated_distance = velocity_obstacle.collision_position.mag() - velocity_obstacle.collision_radius;
       let estimated_speed = p5.Vector.sub(sample_velocity, velocity_obstacle.cone_origin).mag();
