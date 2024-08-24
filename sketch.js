@@ -11,9 +11,13 @@ function setup() {
   frameRate(30);
 
   // experiment = new Experiment(Initializations.circle(20), Policies.avoidClosest, 2.2);
-  experiment = new Experiment(Initializations.straightOnPair(), Policies.avoidClosest, 1.5);
+  // experiment = new Experiment(Initializations.circle(5), Policies.velocityObstacle, 50.0);
+  // experiment = new Experiment(Initializations.straightOnPair(), Policies.avoidClosest, 1.5);
+  experiment = new Experiment(Initializations.parallelLinesOneAcross(12), Policies.velocityObstacle, 20.0);
+  // experiment = new Experiment(Initializations.parallelLinesOneAcross(12), Policies.avoidClosest, 2.0);
+  // experiment = new Experiment(Initializations.differentDistancesPair(), Policies.velocityObstacle, 10.0);
 
-  runExperiments(experiment, 10);
+  // runExperiments(experiment, 10);
   // runExperiments(new Experiment(Initializations.circle(10), Policies.avoidClosest, 2.0), 10);
   // runExperiments(Configurations.circle_velocityObject, 10);
 
@@ -34,7 +38,7 @@ function draw() {
 
   freeze_time = keyIsPressed;
 
-  experiment.step();
+  experiment.step(true);
 
   // draw the experiment
   for (let i = 0; i < experiment.boids.length; i++) {
