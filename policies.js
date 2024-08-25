@@ -20,7 +20,7 @@ const Policies = {
       for (const other_boid of boids) {
         if (other_boid == boid) continue;
 
-        let other_boid_distance = boid.position.dist(other_boid.position);
+        let other_boid_distance = boid.position.dist(other_boid.position) - (boid.radius + other_boid.radius);
 
         if (other_boid_distance < closest_boid_distance) {
           closest_boid = other_boid;
@@ -28,15 +28,16 @@ const Policies = {
         }
       }
 
-      let avoid_vector_mag = boid.evasion_strength * (boid.radius + closest_boid.radius) * boid.max_speed / closest_boid_distance;
-      let avoid_vector = p5.Vector.sub(boid.position, closest_boid.position).setMag(avoid_vector_mag);
+      if (closest_boid_distance > 0) {
+        avoid_vector_mag = boid.evasion_strength / closest_boid_distance;
+        let avoid_vector = p5.Vector.sub(boid.position, closest_boid.position).setMag(avoid_vector_mag);
 
-      let move_vector = p5.Vector.add(preferred_velocity, avoid_vector);
-      if (move_vector.mag() > boid.max_speed) {
-        move_vector.setMag(boid.max_speed);
+        let move_vector = p5.Vector.add(preferred_velocity, avoid_vector);
+        if (move_vector.mag() > boid.max_speed) {
+          move_vector.setMag(boid.max_speed);
+        }
+        boid.target_velocity = move_vector;
       }
-
-      boid.target_velocity = move_vector;
     }
   },
 
