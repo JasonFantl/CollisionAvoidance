@@ -12,10 +12,17 @@ function setup() {
 
   // experiment = new Experiment(Initializations.circle(20), Policies.avoidClosest, 2.2);
   // experiment = new Experiment(Initializations.circle(5), Policies.velocityObstacle, 50.0);
-  // experiment = new Experiment(Initializations.straightOnPair(), Policies.avoidClosest, 1.5);
-  experiment = new Experiment(Initializations.parallelLinesOneAcross(12), Policies.velocityObstacle, 20.0);
+  // experiment = new Experiment(Initializations.straightOnPair(), Policies.avoidClosest, boid_radius = 5, evasion_strength = 2);
+  // experiment = new Experiment(Initializations.straightOnPair(), Policies.velocityObstacle, boid_radius = 10.0, evasion_strength = 100.0);
+
+  // experiment = new Experiment(Initializations.parallelLinesOneAcross(12), Policies.velocityObstacle, 20.0);
   // experiment = new Experiment(Initializations.parallelLinesOneAcross(12), Policies.avoidClosest, 2.0);
   // experiment = new Experiment(Initializations.differentDistancesPair(), Policies.velocityObstacle, 10.0);
+  // experiment = new Experiment(Initializations.tunnel(4), Policies.velocityObstacle, 20.0);
+
+  // experiment = new Experiment(Initializations.circle(50), Policies.velocityObstacle, boid_radius = 5, evasion_strength = 50.0);
+  experiment = new Experiment(Initializations.circle(50), Policies.avoidClosest, boid_radius = 5, evasion_strength = 30.0);
+  // experiment = new Experiment(Initializations.circle(10), Policies.velocityObstacle, boid_radius = 30, evasion_strength = 50.0,);
 
   // runExperiments(experiment, 10);
   // runExperiments(new Experiment(Initializations.circle(10), Policies.avoidClosest, 2.0), 10);
@@ -28,6 +35,9 @@ function setup() {
   // runExperiments(new Experiment(Initializations.circle(10), Policies.velocityObstacle, "adaptive"), 10);
 
   experiment.initialize(0);
+
+  createLoop({ duration: 16, gif: true })
+
 }
 
 let freeze_time = false
@@ -38,11 +48,14 @@ function draw() {
 
   freeze_time = keyIsPressed;
 
-  experiment.step(true);
+  experiment.step(false);
 
   // draw the experiment
   for (let i = 0; i < experiment.boids.length; i++) {
-    experiment.boids[i].draw();
+    experiment.boids[i].drawTrail();
+  }
+  for (let i = 0; i < experiment.boids.length; i++) {
+    experiment.boids[i].drawBoid();
 
     for (let j = i + 1; j < experiment.boids.length; j++) {
       if (experiment.boids[i].position.dist(experiment.boids[j].position) < experiment.boids[i].radius + experiment.boids[j].radius) {

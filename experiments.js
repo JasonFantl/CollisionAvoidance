@@ -1,21 +1,19 @@
 
 
 class Experiment {
-  constructor(initialization, policy, evasion_strength = null) {
+  constructor(initialization, policy, boid_radius = 10.0, evasion_strength = 1.0) {
     this.initialization = initialization;
     this.policy = policy;
     this.evasion_strength = evasion_strength;
+    this.boid_radius = boid_radius;
+
+    this.boids;
   }
 
   initialize(seed) {
     randomSeed(seed);
 
-    this.boids = this.initialization.initialize();
-
-    // set all the evasion strengths
-    for (const boid of this.boids) {
-      boid.evasion_strength = this.evasion_strength;
-    }
+    this.boids = this.initialization.initialize(this.boid_radius, this.evasion_strength);
   }
 
   step(draw_debug = false) {
