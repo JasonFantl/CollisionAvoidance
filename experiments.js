@@ -16,10 +16,10 @@ class Experiment {
     this.boids = this.initialization.initialize(this.boid_radius, this.evasion_strength);
   }
 
-  step(draw_debug = false) {
+  step() {
     for (const boid of this.boids) {
-      if (boid.collided || boid.at_goal) continue;
-      this.policy.run(boid, this.boids, draw_debug);
+      if (boid.collided) continue;
+      this.policy.run(boid, this.boids);
     }
 
     for (const boid of this.boids) {

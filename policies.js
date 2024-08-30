@@ -1,6 +1,4 @@
 
-const scale_debug_display = 20;
-
 const Policies = {
   noCollision: {
     name: "no collision",
@@ -13,7 +11,14 @@ const Policies = {
     name: "avoid closest",
     run: (boid, boids) => {
 
-      let preferred_velocity = p5.Vector.sub(boid.goal, boid.position).setMag(boid.max_speed);
+      let preferred_velocity = p5.Vector.sub(boid.goal, boid.position);
+      let preferred_mag = preferred_velocity.mag();
+      if (preferred_mag > boid.max_speed) {
+        preferred_velocity.setMag(boid.max_speed);
+      } else {
+        preferred_velocity.setMag(boid.max_speed * pow(preferred_mag / boid.max_speed, 2));
+      }
+
 
       let closest_boid = null;
       let closest_boid_distance = Infinity;
@@ -43,8 +48,19 @@ const Policies = {
 
   velocityObstacle: {
     name: "velocity obstacle",
-    run: (boid, boids, draw_debug = false) => {
-      let preferred_velocity = p5.Vector.sub(boid.goal, boid.position).setMag(boid.max_speed);
+    run: (boid, boids) => {
+      let debug_draw_info = {
+        other_boids: [],
+        sample_points: [],
+      };
+
+      let preferred_velocity = p5.Vector.sub(boid.goal, boid.position);
+      let preferred_mag = preferred_velocity.mag();
+      if (preferred_mag > boid.max_speed) {
+        preferred_velocity.setMag(boid.max_speed);
+      } else {
+        preferred_velocity.setMag(boid.max_speed * pow(preferred_mag / boid.max_speed, 2));
+      }
 
       let velocity_obstacles = [];
       for (const other_boid of boids) {
@@ -53,62 +69,30 @@ const Policies = {
         let velocity_obstacle = new VelocityObstacle(boid, other_boid, boid.check_collisions_in_time);
         velocity_obstacles.push(velocity_obstacle);
 
-        if (draw_debug) {
-          stroke(other_boid.color);
-          strokeWeight(0.5);
-          let velocity_obstacle_absolute_position = p5.Vector.add(
-            boid.position,
-            p5.Vector.mult(velocity_obstacle.cone_origin, scale_debug_display)
-          );
-          line(
-            velocity_obstacle_absolute_position.x,
-            velocity_obstacle_absolute_position.y,
-            velocity_obstacle_absolute_position.x + velocity_obstacle.left_ray.x * scale_debug_display,
-            velocity_obstacle_absolute_position.y + velocity_obstacle.left_ray.y * scale_debug_display
-          );
-          line(
-            velocity_obstacle_absolute_position.x,
-            velocity_obstacle_absolute_position.y,
-            velocity_obstacle_absolute_position.x + velocity_obstacle.right_ray.x * scale_debug_display,
-            velocity_obstacle_absolute_position.y + velocity_obstacle.right_ray.y * scale_debug_display
-          );
-        }
+        debug_draw_info.other_boids.push({
+          other_boid: other_boid,
+          velocity_obstacle: velocity_obstacle,
+        });
       }
 
-      boid.target_velocity = findBestSampleVelocity(preferred_velocity, velocity_obstacles, boid, draw_debug);
+      boid.target_velocity = findBestSampleVelocity(preferred_velocity, velocity_obstacles, boid, debug_draw_info);
 
       // draw preferred and selected velocity
-      if (draw_debug) {
-        stroke(boid.color);
+      debug_draw_info.preferred_velocity = preferred_velocity;
+      debug_draw_info.target_velocity = boid.target_velocity;
 
-        strokeWeight(0.5);
-        stroke(boid.color);
-        line(
-          boid.position.x,
-          boid.position.y,
-          boid.position.x + preferred_velocity.x * scale_debug_display,
-          boid.position.y + preferred_velocity.y * scale_debug_display
-        );
-
-        strokeWeight(2);
-        line(
-          boid.position.x,
-          boid.position.y,
-          boid.position.x + boid.target_velocity.x * scale_debug_display,
-          boid.position.y + boid.target_velocity.y * scale_debug_display
-        );
-      }
+      boid.debug_draw = debug_draw_info;
     }
   }
 };
 
 // Helper function for velocity sampling (refactored from velocityObstacle)
-function findBestSampleVelocity(preferred_velocity, velocity_obstacles, boid, draw_debug) {
+function findBestSampleVelocity(preferred_velocity, velocity_obstacles, boid, debug_draw_info) {
   let best_sample_velocity = createVector();
   let lowest_sample_penalty = Infinity;
 
   for (let sample_point_index = 0; sample_point_index < boid.viewing_resolution; sample_point_index++) {
-    let sample_velocity = calculateSampleVelocity(sample_point_index, boid.max_speed);
+    let sample_velocity = calculateSampleVelocity(sample_point_index, boid);
 
     let sample_velocity_penalty = calculatePenaltyForSampleVelocity(
       sample_velocity, preferred_velocity, velocity_obstacles, boid
@@ -119,20 +103,19 @@ function findBestSampleVelocity(preferred_velocity, velocity_obstacles, boid, dr
       lowest_sample_penalty = sample_velocity_penalty;
     }
 
-    if (draw_debug) {
-      stroke(0, 0, sample_velocity_penalty * 10);
-      strokeWeight(1);
-      point(boid.position.x + sample_velocity.x * scale_debug_display, boid.position.y + sample_velocity.y * scale_debug_display);
-    }
+    debug_draw_info.sample_points.push({
+      velocity: sample_velocity,
+      penalty: sample_velocity_penalty
+    });
   }
 
   return best_sample_velocity;
 }
 
 // Utility function to calculate a sample velocity based on index and max speed
-function calculateSampleVelocity(sample_point_index, max_speed) {
-  let sample_angle = sample_point_index * goldenRatio;
-  let sample_magnitude = sqrt(sample_point_index / 512) * max_speed;
+function calculateSampleVelocity(sample_point_index, boid) {
+  let sample_angle = sample_point_index * goldenRatio * TWO_PI;
+  let sample_magnitude = sqrt(sample_point_index / boid.viewing_resolution) * boid.max_speed;
   return p5.Vector.fromAngle(sample_angle).mult(sample_magnitude);
 }
 

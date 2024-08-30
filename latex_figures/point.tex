@@ -1,0 +1,35 @@
+\documentclass[border=1cm]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+
+\begin{document}
+
+\begin{tikzpicture}
+% [trim left=1cm, trim right=1cm, trim top=1cm, trim bottom=1cm]
+    % Define points for A and B
+    \coordinate (pA) at (0,0);
+    \coordinate (pB) at (1.5,3);
+
+    \filldraw[white!50] (pA) circle (0.5cm);
+
+    % Draw shaded circles with black outline
+    \filldraw[gray!50, draw=black, thin] (pB) circle (0.5cm);
+
+        % Draw points at the centers of the circles
+    \filldraw[black] (pA) circle (1pt);
+    \filldraw[black] (pB) circle (1pt);
+
+    % Draw shaded velocity obstacle cone with black outline
+    \filldraw[gray!30, draw=black, thin, opacity=0.5] (pA) -- ++(2.6,8) -- ++(3.05,0) -- cycle;
+
+    % Label points, offset down and to the left
+    \node at ($(pA) + (-0.2,0.2)$) {$_A$};
+    \node at ($(pB) + (-0.2,0.2)$) {$_B$};
+
+    % Draw vector arrows and label velocity above the middle of the vector
+\draw[->, thick, color=red] (pA) -- ++(0.5, 1.1);
+\draw[->, thick, color=green] (pA) -- ++(1.1, 0.5);
+
+\end{tikzpicture}
+
+\end{document}

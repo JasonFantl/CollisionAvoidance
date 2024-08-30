@@ -19,6 +19,8 @@ class Boid {
     this.trail = [];
     this.collided = false;
     this.at_goal = false;
+
+    this.debug_draw;
   }
 
   move() {
@@ -26,7 +28,7 @@ class Boid {
       return;
     }
 
-    if (this.at_goal || this.collided) {
+    if (this.collided) {
       this.target_velocity = createVector(); // zero vector
       this.velocity = createVector(); // zero vector
     } else {
@@ -60,7 +62,7 @@ class Boid {
       this.velocity.add(p5.Vector.fromAngle(random(TWO_PI)).mult(random(0.1))); // NOTE: Add noise to velocity
       this.position.add(p5.Vector.mult(this.velocity, dt));
 
-      if (dist(this.position.x, this.position.y, this.goal.x, this.goal.y) < this.radius / 16) {
+      if (dist(this.position.x, this.position.y, this.goal.x, this.goal.y) < this.radius) {
         this.at_goal = true;
       }
 
